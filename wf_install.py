@@ -81,9 +81,8 @@ if __name__ == '__main__':
 		print 'There was an error with your configuration, check wf_install.cfg and try again'
 		raise
 
-	#conn, session_id = get_server_connection(wf_user, wf_pass)
-	conn, session_id = None, None
-	pprint(locals())
+	conn, session_id = get_server_connection(wf_user, wf_pass)
+
 	print ENV_TEMPLATE.format(**{'app_proj_folder': app_name, 'db_user': db_user, 'db_pass': db_pass, 'db_name': db_name})
 	do_site_setup(conn, session_id, app_name, wf_root_domain, db_name, db_user, db_pass)
 	
