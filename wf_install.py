@@ -12,6 +12,7 @@ APP_TYPES = {
 "Django 1.7.11": "django1711_mw4421_27",
 "Django 1.8.9": "django189_mw4421_27",
 "Django 1.9.2": "django192_mw4421_27",
+"Django 1.9.8": "django198_mw452_27",
 }
 
 
@@ -20,7 +21,7 @@ APP_TYPES = {
 
 def get_server_connection(username, password):
 	conn = xmlrpclib.ServerProxy(WF_SERVER_PROXY)
-	session_id, account = server.login(username, password)
+	session_id, account = conn.login(username, password)
 	return conn, session_id
 
 
@@ -30,12 +31,12 @@ def list_ips(server, session_id):
 def get_server_ip(conn, session_id):
 	for ip in list_ips(conn, session_id):
 		if ip['is_main']:
-			return ip['ip']	
+			return ip['ip']
 
-def do_site_setup(conn, session_id, app_name, root_domain, db_name, db_user, db_pass, django_version="Django 1.8.9", https=False):
+def do_site_setup(conn, session_id, app_name, root_domain, sub_domain, db_name, db_user, db_pass, django_version="Django 1.9.8", https=False):
 	try:
-		logging.info('Creating Domain: {}-{}'.format(root_domain, app_name))
-		conn.create_domain(session_id, root_domain, app_name)
+		logging.info('Creating Domain: {}.{}'.format(sub_domain, root_domain))
+		conn.create_domain(session_id, root_domain, sub_domain)
 	except Exception as e:
 		logging.exception('There was a problem creating the domain')
 		raise
@@ -52,12 +53,12 @@ def do_site_setup(conn, session_id, app_name, root_domain, db_name, db_user, db_
 		logging.exception('There was a problem creating the database')
 		raise
 	try:
-		logging.info('Creating Website: {}, {}'.format(app_name, '.'.join((app_name, root_domain))))
-		conn.create_website(session_id, 
-						  app_name, 
-						  get_server_ip(conn, session_id), 
-						  https,  
-						  ['.'.join((app_name, root_domain))], 
+		logging.info('Creating Website: {}, {}'.format(app_name, '.'.join((sub_domain, root_domain))))
+		conn.create_website(session_id,
+						  app_name,
+						  get_server_ip(conn, session_id),
+						  https,
+						  ['.'.join((sub_domain, root_domain))],
 						  [app_name, '/'])
 	except Exception as e:
 		logging.exception('There was a problem creating the website')
@@ -84,9 +85,4 @@ if __name__ == '__main__':
 	conn, session_id = get_server_connection(wf_user, wf_pass)
 
 	print ENV_TEMPLATE.format(**{'app_proj_folder': app_name, 'db_user': db_user, 'db_pass': db_pass, 'db_name': db_name})
-	do_site_setup(conn, session_id, app_name, wf_root_domain, db_name, db_user, db_pass)
-	
-
-
-
-
+	do_site_setup(conn, session_id, app_name, wf_root_domain, wf_domain, db_name, db_user, db_pass)
